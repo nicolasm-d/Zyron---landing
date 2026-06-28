@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zyron — AI Marketing OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#04060E;--surface:#0A0E1A;--surface2:#111827;
+  --border:rgba(255,255,255,0.055);--border-c:rgba(0,229,200,0.3);
+  --cyan:#00E5C8;--cyan-dim:rgba(0,229,200,0.08);--cyan-glow:rgba(0,229,200,0.2);
+  --text:#EFF3F8;--muted:#374151;--secondary:#6B7280;
+  --green:#22C55E;--red:#EF4444;--purple:#8B5CF6;--amber:#F59E0B;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+
+/* CANVAS 3D */
+#hero-canvas{position:absolute;inset:0;z-index:0;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 52px;
+  background:rgba(4,6,14,0.6);
+  backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--text);text-decoration:none;letter-spacing:-0.5px;}
+.nav-r{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:13px;color:var(--secondary);text-decoration:none;transition:color 0.2s;}
+.nav-link:hover{color:var(--text);}
+.nav-cta{background:var(--cyan);color:#04060E;border:none;border-radius:8px;padding:9px 18px;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.nav-cta:hover{box-shadow:0 0 28px rgba(0,229,200,0.45);transform:translateY(-1px);}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;overflow:hidden;}
+
+/* Texto hero con animación letra por letra */
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;
+  background:var(--cyan-dim);border:1px solid rgba(0,229,200,0.22);
+  border-radius:100px;padding:6px 18px;font-size:12px;color:var(--cyan);
+  font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:36px;position:relative;z-index:10;
+  animation:fadeUp 0.7s ease both;}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 8px var(--cyan);animation:pdot 1.8s ease-in-out infinite;}
+@keyframes pdot{0%,100%{box-shadow:0 0 6px var(--cyan);}50%{box-shadow:0 0 16px var(--cyan),0 0 32px rgba(0,229,200,0.4);}}
+
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(44px,6.5vw,84px);
+  font-weight:800;line-height:1.03;letter-spacing:-3px;margin-bottom:24px;
+  max-width:940px;position:relative;z-index:10;}
+.hero-title .t1{display:block;color:var(--text);opacity:0;animation:fadeUp 0.7s ease 0.15s forwards;}
+.hero-title .t2{display:block;
+  background:linear-gradient(110deg,var(--cyan) 0%,#7CFFE8 40%,var(--cyan) 80%);
+  background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:fadeUp 0.7s ease 0.28s forwards, shimmer 5s ease-in-out 1s infinite;
+  opacity:0;}
+@keyframes shimmer{0%,100%{background-position:0%;}50%{background-position:100%;}}
+.hero-title .t3{display:block;color:var(--text);opacity:0;animation:fadeUp 0.7s ease 0.42s forwards;}
+
+.hero-sub{font-size:clamp(16px,1.8vw,19px);color:var(--secondary);max-width:560px;
+  line-height:1.7;margin-bottom:48px;font-weight:300;
+  position:relative;z-index:10;opacity:0;animation:fadeUp 0.7s ease 0.55s forwards;}
+
+/* FORM */
+.form-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;
+  width:100%;max-width:480px;position:relative;z-index:10;
+  opacity:0;animation:fadeUp 0.7s ease 0.68s forwards;}
+.input-row{display:flex;width:100%;background:rgba(10,14,26,0.9);
+  border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  transition:border-color 0.2s,box-shadow 0.2s;backdrop-filter:blur(12px);}
+.input-row:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,200,0.13);}
+.email-input{flex:1;background:transparent;border:none;padding:16px 20px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;}
+.email-input::placeholder{color:var(--muted);}
+.cta-btn{background:var(--cyan);color:#04060E;border:none;padding:16px 22px;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;white-space:nowrap;}
+.cta-btn:hover{background:#00ffdf;box-shadow:-4px 0 20px rgba(0,229,200,0.3);}
+.form-note{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.form-note span{color:var(--green);}
+.success-msg{display:none;align-items:center;gap:8px;width:100%;
+  background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);
+  border-radius:12px;padding:14px 18px;font-size:14px;color:var(--green);justify-content:center;}
+.success-msg.visible{display:flex;}
+
+/* PROOF */
+.proof-row{display:flex;align-items:center;gap:20px;margin-top:52px;
+  position:relative;z-index:10;opacity:0;animation:fadeUp 0.7s ease 0.82s forwards;}
+.avatars{display:flex;}
+.av{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:10px;margin-left:-8px;}
+.av:first-child{margin-left:0;}
+.proof-text{font-size:13px;color:var(--secondary);}
+.proof-text strong{color:var(--text);}
+.pdiv{width:1px;height:26px;background:var(--border);}
+.counter-wrap{text-align:center;}
+.counter-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--cyan);display:block;}
+.counter-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+
+/* SCROLL INDICATOR */
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  z-index:10;opacity:0;animation:fadeIn 1s ease 1.5s forwards;}
+.scroll-line{width:1px;height:48px;background:linear-gradient(180deg,transparent,var(--cyan));
+  animation:scroll-pulse 2s ease-in-out infinite;}
+@keyframes scroll-pulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
+.scroll-text{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+
+/* BELT */
+.belt{position:relative;z-index:10;padding:28px 0;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;
+  background:rgba(10,14,26,0.5);}
+.belt::before,.belt::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2;pointer-events:none;}
+.belt::before{left:0;background:linear-gradient(90deg,var(--bg),transparent);}
+.belt::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent);}
+.belt-track{display:flex;gap:48px;align-items:center;animation:belt-go 22s linear infinite;width:max-content;}
+.belt-item{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);white-space:nowrap;}
+.belt-sep{width:4px;height:4px;border-radius:50%;background:rgba(0,229,200,0.3);flex-shrink:0;}
+@keyframes belt-go{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* SECCIONES */
+section.s{position:relative;z-index:10;padding:100px 24px;max-width:1100px;margin:0 auto;}
+.s-tag{font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;}
+.s-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;
+  letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;}
+.s-title .ac{color:var(--cyan);}
+.s-sub{font-size:16px;color:var(--secondary);max-width:520px;line-height:1.7;margin-bottom:56px;}
+
+/* FEATURE CARDS 3D */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:28px;position:relative;overflow:hidden;
+  transition:all 0.4s cubic-bezier(0.23,1,0.32,1);
+  transform-style:preserve-3d;cursor:default;}
+.feat-card:hover{border-color:rgba(0,229,200,0.22);
+  box-shadow:0 24px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(0,229,200,0.08);}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);}
+.feat-card .top-bar{position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:20px 20px 0 0;opacity:0;transition:opacity 0.3s;}
+.feat-card:hover .top-bar{opacity:0.8;}
+.feat-card .shine{position:absolute;inset:0;border-radius:20px;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(0,229,200,0.04) 0%,transparent 60%);
+  pointer-events:none;transition:opacity 0.3s;opacity:0;}
+.feat-card:hover .shine{opacity:1;}
+.fi{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;}
+.fn{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+.fd{font-size:13px;color:var(--secondary);line-height:1.65;}
+.ft{display:inline-block;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;margin-top:14px;text-transform:uppercase;letter-spacing:0.3px;}
+
+/* STATS ROW — animados */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:100px;max-width:1100px;margin-left:auto;margin-right:auto;padding:0 24px;position:relative;z-index:10;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:28px;text-align:center;position:relative;overflow:hidden;transition:all 0.3s;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);}
+.stat-card:hover{transform:translateY(-4px);border-color:rgba(0,229,200,0.15);}
+.stat-num{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;letter-spacing:-2px;
+  color:var(--cyan);display:block;margin-bottom:6px;}
+.stat-label{font-size:13px;color:var(--secondary);}
+
+/* VS */
+.vs-section{position:relative;z-index:10;padding:0 24px 100px;max-width:1100px;margin:0 auto;}
+.vs-grid{display:grid;grid-template-columns:1fr 80px 1fr;gap:0;align-items:center;}
+.vs-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;transition:all 0.3s;}
+.vs-card.ours{border-color:var(--border-c);
+  background:linear-gradient(160deg,rgba(0,229,200,0.05),var(--surface));
+  box-shadow:0 0 60px rgba(0,229,200,0.07),0 0 0 1px rgba(0,229,200,0.1);}
+.vs-card.ours::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0.6;}
+.vs-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;}
+.vs-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.vs-row:last-child{border-bottom:none;}
+.vs-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+.vs-row.good{color:var(--text);}
+.vs-row.bad{color:var(--muted);text-decoration:line-through;}
+.vs-mid{display:flex;align-items:center;justify-content:center;}
+.vs-vs{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--muted);}
+
+/* PRICING */
+.pricing-section{position:relative;z-index:10;padding:0 24px 100px;max-width:1100px;margin:0 auto;text-align:center;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;text-align:left;}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:30px;position:relative;overflow:hidden;transition:all 0.3s;}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,0.5);}
+.price-card.featured{border-color:var(--border-c);background:linear-gradient(160deg,rgba(0,229,200,0.06),var(--surface));}
+.price-card.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.price-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:100px;display:inline-block;margin-bottom:18px;text-transform:uppercase;letter-spacing:0.5px;}
+.price-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px;}
+.price-amount{font-family:'Syne',sans-serif;font-size:50px;font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:4px;}
+.price-amount sup{font-size:22px;vertical-align:top;margin-top:8px;}
+.price-amount sub{font-size:14px;letter-spacing:0;color:var(--secondary);}
+.price-desc{font-size:13px;color:var(--secondary);margin-bottom:24px;line-height:1.5;}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:26px;}
+.price-list li{font-size:13px;color:var(--secondary);display:flex;align-items:center;gap:8px;}
+.price-list li span{color:var(--cyan);}
+.price-btn{width:100%;padding:14px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;}
+.pb-p{background:var(--cyan);color:#04060E;}
+.pb-p:hover{box-shadow:0 6px 24px rgba(0,229,200,0.45);transform:translateY(-1px);}
+.pb-s{background:transparent;border:1px solid var(--border);color:var(--secondary);}
+.pb-s:hover{border-color:var(--border-c);color:var(--text);}
+.early-chip{display:inline-flex;align-items:center;gap:7px;
+  background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);
+  border-radius:100px;padding:7px 18px;font-size:12px;color:var(--amber);font-weight:600;margin-bottom:22px;}
+
+/* FAQ */
+.faq{position:relative;z-index:10;padding:0 24px 100px;max-width:700px;margin:0 auto;}
+.faq-item{border-bottom:1px solid var(--border);cursor:pointer;}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:22px 0;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;user-select:none;}
+.faq-ico{color:var(--cyan);font-size:20px;transition:transform 0.25s;flex-shrink:0;}
+.faq-item.open .faq-ico{transform:rotate(45deg);}
+.faq-a{font-size:14px;color:var(--secondary);line-height:1.75;padding-bottom:22px;display:none;}
+.faq-item.open .faq-a{display:block;}
+
+/* CTA BOX */
+.cta-section{position:relative;z-index:10;padding:0 24px 120px;display:flex;justify-content:center;}
+.cta-box{max-width:700px;width:100%;
+  background:linear-gradient(160deg,rgba(0,229,200,0.05),var(--surface));
+  border:1px solid var(--border-c);border-radius:28px;padding:64px 56px;
+  text-align:center;position:relative;overflow:hidden;}
+.cta-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.cta-glow-top{position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:400px;height:300px;
+  background:radial-gradient(ellipse,rgba(0,229,200,0.12),transparent 70%);
+  filter:blur(30px);pointer-events:none;}
+.cta-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);
+  font-weight:800;letter-spacing:-1px;margin-bottom:14px;position:relative;z-index:1;}
+.cta-sub{font-size:15px;color:var(--secondary);margin-bottom:36px;line-height:1.65;position:relative;z-index:1;}
+
+footer{position:relative;z-index:10;text-align:center;padding:28px;
+  border-top:1px solid var(--border);font-size:12px;color:var(--muted);}
+footer span{color:var(--secondary);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.7s ease,transform 0.7s ease;}
+.reveal.vis{opacity:1;transform:translateY(0);}
+
+@media(max-width:768px){
+  nav{padding:14px 20px;}
+  .feat-grid,.pricing-grid{grid-template-columns:1fr;}
+  .vs-grid{grid-template-columns:1fr;}
+  .vs-mid{display:none;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .cta-box{padding:40px 24px;}
+  .input-row{flex-direction:column;border-radius:14px;}
+  .cta-btn{border-radius:0 0 13px 13px;padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+      <rect width="48" height="48" rx="11" fill="#0A0E1A"/>
+      <rect width="48" height="48" rx="11" fill="#00E5C8" fill-opacity="0.09"/>
+      <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="10.25" stroke="#00E5C8" stroke-opacity="0.22" stroke-width="1.5"/>
+      <defs><linearGradient id="zg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00E5C8"/><stop offset="100%" stop-color="#00B8A0"/></linearGradient></defs>
+      <path d="M14 14H30L18 24H34" stroke="url(#zg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 34H30" stroke="#00E5C8" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+      <circle cx="34" cy="14" r="3.5" fill="#00E5C8"/>
+    </svg>
+    Zyron
+  </a>
+  <div class="nav-r">
+    <a class="nav-link" href="#features">Producto</a>
+    <a class="nav-link" href="#pricing">Precios</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+    <button class="nav-cta" onclick="scrollToForm()">Early Access →</button>
+  </div>
+</nav>
+
+<!-- HERO con canvas 3D -->
+<section class="hero" id="heroSection">
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Early Access — Solo 200 cupos</div>
+
+  <h1 class="hero-title">
+    <span class="t1">El sistema completo</span>
+    <span class="t2">que escala tu negocio.</span>
+    <span class="t3">Con IA. Todo en uno.</span>
+  </h1>
+
+  <p class="hero-sub">Crea tu marca, lanza anuncios, prospecta clientes, gestiona leads y automatiza todo — desde una sola plataforma. Sin agencias. Sin 7 herramientas distintas.</p>
+
+  <div class="form-wrap" id="heroForm">
+    <div class="input-row">
+      <input class="email-input" type="email" id="heroEmail" placeholder="tucorreo@empresa.com"/>
+      <button class="cta-btn" onclick="handleSubmit('heroEmail','heroSuccess')">Quiero acceso Early →</button>
+    </div>
+    <div class="success-msg" id="heroSuccess">✅ ¡Estás dentro! Te avisamos en las próximas 48h.</div>
+    <p class="form-note"><span>✓</span> Sin tarjeta. Sin compromisos. 100% gratis.</p>
+  </div>
+
+  <div class="proof-row">
+    <div class="avatars">
+      <div class="av" style="background:linear-gradient(135deg,#1a2a3a,#00E5C8);color:#00E5C8">MR</div>
+      <div class="av" style="background:linear-gradient(135deg,#251a2e,#8B5CF6);color:#8B5CF6">KL</div>
+      <div class="av" style="background:linear-gradient(135deg,#1a2218,#22C55E);color:#22C55E">SV</div>
+      <div class="av" style="background:linear-gradient(135deg,#251f1a,#F59E0B);color:#F59E0B">PA</div>
+      <div class="av" style="background:linear-gradient(135deg,#1a1f2e,#3B82F6);color:#3B82F6">LK</div>
+    </div>
+    <p class="proof-text"><strong id="counter">0</strong> personas en lista de espera</p>
+    <div class="pdiv"></div>
+    <div class="counter-wrap">
+      <span class="counter-num" id="spots">200</span>
+      <span class="counter-label">cupos totales</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span class="scroll-text">Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- BELT -->
+<div class="belt">
+  <div class="belt-track">
+    <span class="belt-item">Marca con IA</span><span class="belt-sep"></span>
+    <span class="belt-item">Pauta Meta & Google</span><span class="belt-sep"></span>
+    <span class="belt-item">Prospección Instagram</span><span class="belt-sep"></span>
+    <span class="belt-item">CRM Completo</span><span class="belt-sep"></span>
+    <span class="belt-item">Agentes IA 24/7</span><span class="belt-sep"></span>
+    <span class="belt-item">Agentes de Voz</span><span class="belt-sep"></span>
+    <span class="belt-item">Embudos de Venta</span><span class="belt-sep"></span>
+    <span class="belt-item">Automatizaciones</span><span class="belt-sep"></span>
+    <span class="belt-item">Bots WhatsApp & IG</span><span class="belt-sep"></span>
+    <span class="belt-item">Analytics Premium</span><span class="belt-sep"></span>
+    <span class="belt-item">Modelo de Afiliados</span><span class="belt-sep"></span>
+    <span class="belt-item">Marca con IA</span><span class="belt-sep"></span>
+    <span class="belt-item">Pauta Meta & Google</span><span class="belt-sep"></span>
+    <span class="belt-item">Prospección Instagram</span><span class="belt-sep"></span>
+    <span class="belt-item">CRM Completo</span><span class="belt-sep"></span>
+    <span class="belt-item">Agentes IA 24/7</span><span class="belt-sep"></span>
+    <span class="belt-item">Agentes de Voz</span><span class="belt-sep"></span>
+    <span class="belt-item">Embudos de Venta</span><span class="belt-sep"></span>
+    <span class="belt-item">Automatizaciones</span><span class="belt-sep"></span>
+    <span class="belt-item">Bots WhatsApp & IG</span><span class="belt-sep"></span>
+    <span class="belt-item">Analytics Premium</span><span class="belt-sep"></span>
+    <span class="belt-item">Modelo de Afiliados</span><span class="belt-sep"></span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row reveal">
+  <div class="stat-card"><span class="stat-num" data-target="1284">0</span><span class="stat-label">Leads capturados por día</span></div>
+  <div class="stat-card"><span class="stat-num" data-target="278" data-prefix="$" data-suffix="/mes ahorrado">0</span><span class="stat-label">vs herramientas separadas</span></div>
+  <div class="stat-card"><span class="stat-num" data-target="24" data-suffix="/7">0</span><span class="stat-label">Agentes IA trabajando</span></div>
+  <div class="stat-card"><span class="stat-num" data-target="10">0</span><span class="stat-label">Módulos integrados</span></div>
+</div>
+
+<!-- FEATURES -->
+<section class="s reveal" id="features">
+  <div class="s-tag">✦ Plataforma completa</div>
+  <h2 class="s-title">Un sistema.<br><span class="ac">Todo conectado.</span></h2>
+  <p class="s-sub">Deja de pagar $278/mes en herramientas que no se hablan. Zyron lo consolida todo en uno.</p>
+  <div class="feat-grid">
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#00E5C8"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(0,229,200,0.08)">✦</div>
+      <div class="fn">Marca con IA</div>
+      <div class="fd">Logo, paleta, tipografía e identidad visual completa generada por IA en minutos. Sin diseñador.</div>
+      <div class="ft" style="background:rgba(0,229,200,0.08);color:#00E5C8">Crear</div>
+    </div>
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#3B82F6"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(59,130,246,0.08)">📢</div>
+      <div class="fn">Pauta con IA</div>
+      <div class="fd">Campañas en Meta, Google y TikTok. La IA genera copy, creativos y optimiza el ROAS automáticamente.</div>
+      <div class="ft" style="background:rgba(59,130,246,0.08);color:#3B82F6">Pautar</div>
+    </div>
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#E1306C"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(225,48,108,0.08)">🎯</div>
+      <div class="fn">Prospección Auto</div>
+      <div class="fd">Prospecta seguidores de tu competencia en Instagram y Facebook. DMs automáticos con modo humano.</div>
+      <div class="ft" style="background:rgba(225,48,108,0.08);color:#E1306C">Prospectar</div>
+    </div>
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#22C55E"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(34,197,94,0.08)">👥</div>
+      <div class="fn">CRM Completo</div>
+      <div class="fd">Pipeline visual, historial de leads, agenda integrada. Los agentes actualizan el CRM solos en tiempo real.</div>
+      <div class="ft" style="background:rgba(34,197,94,0.08);color:#22C55E">Gestionar</div>
+    </div>
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#8B5CF6"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(139,92,246,0.08)">🤖</div>
+      <div class="fn">Agentes IA</div>
+      <div class="fd">Agentes de email, voz y chat que trabajan 24/7. Los configuras una vez — ellos hacen el trabajo.</div>
+      <div class="ft" style="background:rgba(139,92,246,0.08);color:#8B5CF6">Automatizar</div>
+    </div>
+    <div class="feat-card" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+      <div class="top-bar" style="background:#F59E0B"></div>
+      <div class="shine"></div>
+      <div class="fi" style="background:rgba(245,158,11,0.08)">📄</div>
+      <div class="fn">Embudos & Bots</div>
+      <div class="fd">Constructor de embudos con IA, bots para Instagram, WhatsApp y web. De clic a cliente cerrado.</div>
+      <div class="ft" style="background:rgba(245,158,11,0.08);color:#F59E0B">Vender</div>
+    </div>
+  </div>
+</section>
+
+<!-- VS -->
+<section class="vs-section reveal">
+  <div style="text-align:center;margin-bottom:52px">
+    <div class="s-tag">✦ Comparativa</div>
+    <h2 class="s-title">Antes y <span class="ac">después.</span></h2>
+  </div>
+  <div class="vs-grid">
+    <div class="vs-card">
+      <p class="vs-label" style="color:var(--secondary)">😩 Sin Zyron — hoy</p>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> Canva para creativos — $15/mes</div>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> SaleAds para anuncios — $99/mes</div>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> InstaLeads para prospección — $50/mes</div>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> HubSpot para CRM — $50/mes</div>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> ManyChat para bots — $15/mes</div>
+      <div class="vs-row bad"><span class="vs-icon">✗</span> Dapta para agentes de voz — $49/mes</div>
+      <div class="vs-row" style="color:var(--red);font-weight:700;border-bottom:none"><span class="vs-icon">💸</span> $278/mes · Todo desconectado</div>
+    </div>
+    <div class="vs-mid"><div class="vs-vs">VS</div></div>
+    <div class="vs-card ours" style="position:relative">
+      <p class="vs-label" style="color:var(--cyan)">🚀 Con Zyron</p>
+      <div class="vs-row good"><span class="vs-icon">✓</span> Marca con IA incluida</div>
+      <div class="vs-row good"><span class="vs-icon">✓</span> Pauta Meta, Google, TikTok</div>
+      <div class="vs-row good"><span class="vs-icon">✓</span> Prospección Instagram y Facebook</div>
+      <div class="vs-row good"><span class="vs-icon">✓</span> CRM + Agenda integrada</div>
+      <div class="vs-row good"><span class="vs-icon">✓</span> Bots en todos los canales</div>
+      <div class="vs-row good"><span class="vs-icon">✓</span> Agentes de voz + email + ventas</div>
+      <div class="vs-row" style="color:var(--cyan);font-weight:700;border-bottom:none"><span class="vs-icon">⚡</span> Desde $97/mes · Todo conectado</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section reveal" id="pricing">
+  <div class="s-tag">✦ Early Access</div>
+  <h2 class="s-title">Precio de <span class="ac">fundador.</span></h2>
+  <p class="s-sub" style="margin:12px auto 24px">Los primeros 200 usuarios se quedan con este precio para siempre.</p>
+  <div class="early-chip">🔥 50% descuento · Solo Early Access · 200 cupos totales</div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-badge" style="background:rgba(107,114,128,0.1);color:var(--secondary)">Starter</div>
+      <div class="price-name">Para emprendedores</div>
+      <div class="price-amount" style="color:var(--text)"><sup>$</sup>47<sub>/mes</sub></div>
+      <p class="price-desc">Antes $97/mes · Precio fundador para siempre</p>
+      <ul class="price-list">
+        <li><span>✦</span> Marca con IA</li>
+        <li><span>✦</span> CRM hasta 500 contactos</li>
+        <li><span>✦</span> 1 agente IA activo</li>
+        <li><span>✦</span> Bots básicos</li>
+        <li><span>✦</span> 2,000 créditos/mes</li>
+      </ul>
+      <button class="price-btn pb-s" onclick="scrollToForm()">Reservar acceso</button>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge" style="background:rgba(0,229,200,0.1);color:var(--cyan)">⭐ Más popular</div>
+      <div class="price-name">Para negocios en crecimiento</div>
+      <div class="price-amount" style="color:var(--cyan)"><sup>$</sup>97<sub>/mes</sub></div>
+      <p class="price-desc">Antes $197/mes · Precio fundador para siempre</p>
+      <ul class="price-list">
+        <li><span>✦</span> Todo en Starter +</li>
+        <li><span>✦</span> Pauta Meta, Google, TikTok</li>
+        <li><span>✦</span> Prospección automática IG/FB</li>
+        <li><span>✦</span> 5 agentes IA activos</li>
+        <li><span>✦</span> Embudos ilimitados</li>
+        <li><span>✦</span> 10,000 créditos/mes</li>
+      </ul>
+      <button class="price-btn pb-p" onclick="scrollToForm()">Quiero este plan →</button>
+    </div>
+    <div class="price-card">
+      <div class="price-badge" style="background:rgba(139,92,246,0.1);color:var(--purple)">Agency</div>
+      <div class="price-name">Para agencias y equipos</div>
+      <div class="price-amount" style="color:var(--purple)"><sup>$</sup>197<sub>/mes</sub></div>
+      <p class="price-desc">Antes $397/mes · Precio fundador para siempre</p>
+      <ul class="price-list">
+        <li><span>✦</span> Todo en Pro +</li>
+        <li><span>✦</span> Multi-workspace</li>
+        <li><span>✦</span> Agentes de voz ilimitados</li>
+        <li><span>✦</span> Analytics avanzado</li>
+        <li><span>✦</span> Soporte prioritario</li>
+        <li><span>✦</span> 30,000 créditos/mes</li>
+      </ul>
+      <button class="price-btn pb-s" onclick="scrollToForm()">Reservar acceso</button>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq reveal" id="faq">
+  <div style="text-align:center;margin-bottom:48px">
+    <div class="s-tag">✦ FAQ</div>
+    <h2 class="s-title" style="font-size:clamp(24px,3vw,38px)">¿Tienes <span class="ac">dudas?</span></h2>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">¿Cuándo lanza la plataforma? <span class="faq-ico">+</span></div>
+    <div class="faq-a">Los primeros accesos Early estarán disponibles en los próximos 3-4 meses. Recibirás acceso antes que nadie y al precio de fundador, que se mantiene de por vida.</div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">¿Necesito conocimientos técnicos? <span class="faq-ico">+</span></div>
+    <div class="faq-a">No. La plataforma está diseñada para que cualquier emprendedor configure todo en menos de 10 minutos con el onboarding guiado por IA.</div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">¿La prospección en Instagram es segura? <span class="faq-ico">+</span></div>
+    <div class="faq-a">Sí. Nuestra prospección corre directamente en el navegador del usuario, simulando comportamiento humano con delays aleatorios. El mismo sistema que usan las herramientas más confiables del mercado.</div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">¿Puedo cancelar cuando quiera? <span class="faq-ico">+</span></div>
+    <div class="faq-a">Sí, sin penalizaciones ni contratos. Si estás en Early Access, tu precio fundador se mantiene mientras tu suscripción esté activa.</div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">¿Qué son los créditos de IA? <span class="faq-ico">+</span></div>
+    <div class="faq-a">Cada acción de IA consume créditos. Cada plan incluye créditos mensuales. Puedes comprar más si los necesitas. Así controlas tu presupuesto.</div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<div class="cta-section reveal">
+  <div class="cta-box">
+    <div class="cta-glow-top"></div>
+    <div class="hero-eyebrow" style="display:inline-flex;margin-bottom:24px">🔥 Quedan pocos cupos de Early Access</div>
+    <h2 class="cta-title">Reserva tu lugar<br><span style="color:var(--cyan)">antes de que suban los precios.</span></h2>
+    <p class="cta-sub">Solo 200 cupos al precio fundador. Una vez llenos, el precio sube y no hay vuelta atrás.</p>
+    <div class="form-wrap" style="margin:0 auto">
+      <div class="input-row">
+        <input class="email-input" type="email" id="ctaEmail" placeholder="tucorreo@empresa.com"/>
+        <button class="cta-btn" onclick="handleSubmit('ctaEmail','ctaSuccess')">Asegurar mi cupo →</button>
+      </div>
+      <div class="success-msg" id="ctaSuccess">✅ ¡Estás dentro! Te contactamos pronto.</div>
+      <p class="form-note"><span>✓</span> Sin tarjeta. Sin compromisos. 100% gratis.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 Zyron · Powered by <span>Wildframe Studio</span> · Todos los derechos reservados</p>
+</footer>
+
+<script>
+/* ══════════════════════════════════
+   CANVAS 3D — red de nodos flotantes
+   con perspectiva y profundidad real
+   ══════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], mouse = {x:0, y:0};
+  const N = 90, CONN_DIST = 160, CYAN = '0,229,200';
+
+  function resize(){
+    W = canvas.width = canvas.parentElement.offsetWidth;
+    H = canvas.height = canvas.parentElement.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Nodos 3D con Z para profundidad
+  for(let i=0;i<N;i++){
+    nodes.push({
+      x: Math.random()*W, y: Math.random()*H,
+      z: Math.random()*2 + 0.3,           // profundidad 0.3-2.3
+      vx:(Math.random()-0.5)*0.4,
+      vy:(Math.random()-0.5)*0.4,
+      r: Math.random()*1.5+0.5,
+      pulse: Math.random()*Math.PI*2,
+      speed: Math.random()*0.015+0.005
+    });
+  }
+
+  canvas.addEventListener('mousemove', e=>{
+    const r = canvas.getBoundingClientRect();
+    mouse.x = e.clientX-r.left;
+    mouse.y = e.clientY-r.top;
+  });
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Actualizar nodos
+    nodes.forEach(n=>{
+      n.x += n.vx * n.z;
+      n.y += n.vy * n.z;
+      n.pulse += n.speed;
+      if(n.x<-20)n.x=W+20; if(n.x>W+20)n.x=-20;
+      if(n.y<-20)n.y=H+20; if(n.y>H+20)n.y=-20;
+
+      // Atracción suave hacia el mouse
+      const dx=mouse.x-n.x, dy=mouse.y-n.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<220){
+        n.x += dx*0.0008*n.z;
+        n.y += dy*0.0008*n.z;
+      }
+    });
+
+    // Conexiones
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const a=nodes[i], b=nodes[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        const avgZ=(a.z+b.z)/2;
+        const maxD=CONN_DIST*avgZ;
+        if(dist<maxD){
+          const alpha=(1-dist/maxD)*0.12*avgZ;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle=`rgba(${CYAN},${alpha})`;
+          ctx.lineWidth=0.5*avgZ;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Nodos
+    nodes.forEach(n=>{
+      const pulse=Math.sin(n.pulse)*0.3+0.7;
+      const r=n.r*n.z*pulse;
+      const alpha=0.15*n.z*pulse;
+
+      // Glow
+      const grd=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
+      grd.addColorStop(0,`rgba(${CYAN},${alpha*0.8})`);
+      grd.addColorStop(1,`rgba(${CYAN},0)`);
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,r*4,0,Math.PI*2);
+      ctx.fillStyle=grd;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${CYAN},${0.6*n.z*pulse})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════
+   TILT 3D en feature cards
+   ══════════════════════ */
+function tilt(el, e){
+  const r=el.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width-0.5;
+  const y=(e.clientY-r.top)/r.height-0.5;
+  el.style.transform=`perspective(800px) rotateY(${x*10}deg) rotateX(${-y*10}deg) translateY(-4px)`;
+  el.style.setProperty('--mx',`${(x+0.5)*100}%`);
+  el.style.setProperty('--my',`${(y+0.5)*100}%`);
+}
+function untilt(el){
+  el.style.transform='perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+}
+
+/* ══════════════════════
+   COUNTERS animados
+   ══════════════════════ */
+function animNum(el,from,to,dur,prefix='',suffix=''){
+  let start=null;
+  function step(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/dur,1);
+    const ease=1-Math.pow(1-p,3);
+    const val=Math.floor(from+(to-from)*ease);
+    el.textContent=prefix+val.toLocaleString()+suffix;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Counter hero al cargar
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    animNum(document.getElementById('counter'),0,183,2000);
+    animNum(document.getElementById('spots'),200,200,100);
+  },900);
+});
+
+// Stats counters al aparecer
+const statCards=document.querySelectorAll('.stat-card');
+const statObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target.querySelector('.stat-num');
+      const target=parseInt(el.dataset.target||'0');
+      const prefix=el.dataset.prefix||'';
+      const suffix=el.dataset.suffix||'';
+      animNum(el,0,target,1800,prefix,suffix);
+      statObs.unobserve(e.target);
+    }
+  });
+},{threshold:0.3});
+statCards.forEach(c=>statObs.observe(c));
+
+/* ══════════════════════
+   FORM
+   ══════════════════════ */
+function handleSubmit(inputId,successId){
+  const input=document.getElementById(inputId);
+  const email=input.value;
+  if(!email||!email.includes('@')){
+    input.style.outline='2px solid rgba(239,68,68,0.4)';
+    input.focus();
+    setTimeout(()=>input.style.outline='',1400);
+    return;
+  }
+  input.closest('.input-row').style.display='none';
+  document.getElementById(successId).classList.add('visible');
+  const c=document.getElementById('counter');
+  animNum(c,183,184,500);
+}
+
+function scrollToForm(){
+  document.getElementById('heroSection').scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>document.getElementById('heroEmail').focus(),700);
+}
+
+/* ══════════════════════
+   REVEAL ON SCROLL
+   ══════════════════════ */
+const reveals=document.querySelectorAll('.reveal');
+const revObs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('vis'),i*70);
+    }
+  });
+},{threshold:0.07});
+reveals.forEach(r=>revObs.observe(r));
+</script>
+</body>
+</html>
